@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agri-Assist Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #ddd;
+        }
+
+        .weather-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .weather-card {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .weather-card-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .weather-card:hover .weather-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .weather-card-front,
+        .weather-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            padding: 1rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .weather-card-front {
+            background: #f0faf0;
+        }
+
+        .weather-card-back {
+            background: #ffeb3b;
+            transform: rotateY(180deg);
+        }
+
+        .weather-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        #locationDetails {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .info-box {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Language Selector -->
+        <div class="section">
+            <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="kn">ಕನ್ನಡ</option>
+                <option value="hi">हिन्दी</option> <!-- Added Hindi option -->
+            </select>
+        </div>
+
+        <!-- Location Selection -->
+        <div class="section">
+            <h2 data-i18n="location">Location</h2>
+            <button onclick="getCurrentLocation()">
+                <span data-i18n="getLocation">Get My Location</span>
+            </button>
+            <div id="locationDetails"></div>
+            <div id="locationStatus"></div>
+        </div>
+
+        <!-- Weather Forecast -->
+        <div class="section">
+            <h2 data-i18n="weather">Weather Forecast</h2>
+            <div class="weather-cards" id="weatherContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive Internationalization
+        const i18n = {
+            en: {
+                location: "Location",
+                getLocation: "Get My Location",
+                weather: "7-Day Weather Forecast",
+                temp: "Temperature",
+                locationError: "Unable to get location",
+                locationSuccess: "Location Found",
+                irrigation: "Recommended Irrigation",
+                plantingHarvesting: "Planting and Harvesting Timing"
+            },
+            es: {
+                location: "Ubicación",
+                getLocation: "Obtener mi ubicación",
+                weather: "Pronóstico del tiempo 7 días",
+                temp: "Temperatura",
+                locationError: "No se pudo obtener la ubicación",
+                locationSuccess: "Ubicación encontrada",
+                irrigation: "Riego recomendado",
+                plantingHarvesting: "Temporada de siembra y cosecha"
+            },
+            kn: {
+                location: "ಸ್ಥಳ",
+                getLocation: "ನನ್ನ ಸ್ಥಳ ಪಡೆಯಿರಿ",
+                weather: "7 ದಿನಗಳ ಹವಾಮಾನ ಮಾಹಿತಿ",
+                temp: "ಉಷ್ಣಾಂಶ",
+                locationError: "ಸ್ಥಳ ಪಡೆಯಲು ಸಾಧ್ಯಾಗಲಿಲ್ಲ",
+                locationSuccess: "ಸ್ಥಳ ಕಂಡುಹಿಡಿಯಲಾಗಿದೆ",
+                irrigation: "ಪರಿಹಾರಕ್ಕಾಗಿ ನೀರು ಹಚ್ಚುವ ವಿಧಾನ",
+                plantingHarvesting: "ಹೆಚ್ಚುವಿಕೆಯ ಸಮಯ ಮತ್ತು ಹಾರ್ವೆಸ್ಟಿಂಗ್"
+            },
+            hi: {
+                location: "स्थान",
+                getLocation: "मेरी स्थिति प्राप्त करें",
+                weather: "7-दिन का मौसम पूर्वानुमान",
+                temp: "तापमान",
+                locationError: "स्थान प्राप्त करने में असमर्थ",
+                locationSuccess: "स्थान मिला",
+                irrigation: "सुझाया गया सिंचाई",
+                plantingHarvesting: "पौधारोपण और फसल काटने का समय"
+            }
+        };
+
+        // Weather Icons Mapping
+        const weatherIcons = {
+            0: '☀️',   // Clear sky
+            1: '🌤️',  // Mainly clear
+            2: '⛅',   // Partly cloudy
+            3: '☁️',   // Overcast
+            45: '🌫️', // Foggy
+            51: '🌦️', // Light Drizzle
+            53: '🌧️', // Moderate Drizzle
+            61: '🌧️', // Slight Rain
+            63: '🌧️', // Moderate Rain
+            65: '🌊', // Heavy Rain
+            71: '❄️',  // Slight Snow
+            73: '❄️',  // Moderate Snow
+            75: '🌨️'  // Heavy Snow
+        };
+
+        // Configuration Object
+        const CONFIG = {
+            DEFAULT_LAT: 12.9716,    // Bangalore default
+            DEFAULT_LON: 77.5946,
+            CURRENT_LANG: 'en'
+        };
+
+        // Reverse Geocoding Function
+        async function getLocationName(lat, lon) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+
+                const city = data.address.city || data.address.town || data.address.village || 'Unknown Location';
+                const state = data.address.state || data.address.county || 'Unknown State';
+                const country = data.address.country || 'Unknown Country';
+
+                return `${city}, ${state}, ${country}`;
+            } catch (error) {
+                console.error('Location Name Error:', error);
+                return 'Unknown Location';
+            }
+        }
+
+        // Geolocation Handler
+        async function getCurrentLocation() {
+            const locationStatus = document.getElementById('locationStatus');
+            const locationDetails = document.getElementById('locationDetails');
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        CONFIG.DEFAULT_LAT = position.coords.latitude;
+                        CONFIG.DEFAULT_LON = position.coords.longitude;
+
+                        const locationName = await getLocationName(CONFIG.DEFAULT_LAT, CONFIG.DEFAULT_LON);
+                        locationDetails.textContent = `📍 ${locationName} (${CONFIG.DEFAULT_LAT.toFixed(4)}, ${CONFIG.DEFAULT_LON.toFixed(4)})`;
+
+                        locationStatus.textContent = i18n[CONFIG.CURRENT_LANG].locationSuccess;
+
+                        // Load weather data
+                        loadWeatherData();
+                    },
+                    (error) => {
+                        locationStatus.textContent = `${i18n[CONFIG.CURRENT_LANG].locationError}: ${error.message}`;
+                    }
+                );
+            } else {
+                locationStatus.textContent = "Geolocation not supported";
+            }
+        }
+
+        // Weather Data Retrieval
+        async function loadWeatherData() {
+            try {
+                const response = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.DEFAULT_LAT}&longitude=${CONFIG.DEFAULT_LON}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`
+                );
+                const data = await response.json();
+                renderWeather(data);
+            } catch (error) {
+                console.error('Weather Fetch Error:', error);
+            }
+        }
+
+        function getIrrigationMethod(temperature) {
+            if (temperature >= 30) {
+                return i18n[CONFIG.CURRENT_LANG].irrigation + ": " + "Sprinkler (for cooling)";
+            } else {
+                return i18n[CONFIG.CURRENT_LANG].irrigation + ": " + "Drip (water-saving)";
+            }
+        }
+
+        function getPlantingHarvestingTiming(temperature) {
+            if (temperature >= 25) {
+                return i18n[CONFIG.CURRENT_LANG].plantingHarvesting + ": " + "Planting season is ideal";
+            } else {
+                return i18n[CONFIG.CURRENT_LANG].plantingHarvesting + ": " + "Harvesting season approaching";
+            }
+        }
+
+        function renderWeather({ daily }) {
+            const container = document.getElementById('weatherContainer');
+            container.innerHTML = daily.time.map((date, i) => {
+                const weatherCode = daily.weathercode[i];
+                const icon = weatherIcons[weatherCode] || '🌈';
+                const maxTemp = daily.temperature_2m_max[i];
+                const minTemp = daily.temperature_2m_min[i];
+
+                return `
+                    <div class="weather-card">
+                        <div class="weather-card-inner">
+                            <!-- Front of Card -->
+                            <div class="weather-card-front">
+                                <div class="weather-icon">${icon}</div>
+                                <h3>${new Date(date).toLocaleDateString(CONFIG.CURRENT_LANG)}</h3>
+                                <p>${i18n[CONFIG.CURRENT_LANG].temp}: 
+                                    ${maxTemp}°C / ${minTemp}°C
+                                </p>
+                            </div>
+                            <!-- Back of Card -->
+                            <div class="weather-card-back">
+                                <div class="info-box">
+                                    ${getIrrigationMethod(maxTemp)}
+                                </div>
+                                <div class="info-box">
+                                    ${getPlantingHarvestingTiming(maxTemp)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Language Update Function
+        function updateLanguage(lang) {
+            CONFIG.CURRENT_LANG = lang;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = i18n[lang][key] || el.textContent;
+            });
+
+            // Reload data with new language
+            loadWeatherData();
+        }
+
+        // Event Listeners
+        document.getElementById('languageSelect').addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
+        });
+
+        // Initial Setup
+        updateLanguage('en');
+    </script>
+</body>
+
+</html>

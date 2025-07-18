@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer's Guide</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Upload Image for Prediction</h1>
+
+        <form action="/predict" method="post" enctype="multipart/form-data">
+            <label for="model_type">Select Model Type:</label>
+            <select name="model_type" id="model_type" required>
+                <option value="plant_disease">Plant Disease</option>
+                <option value="fruit_veg_quality">Fruit & Vegetable Quality</option>
+                <option value="Banana_leaf_deficiency">Banana Leaf Deficiency</option>
+            </select>
+
+            <label for="file">Upload Image:</label>
+            <input type="file" name="file" id="file" accept="image/*" required>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        {% if result %}
+        <div class="result">
+            <h2>Prediction Results:</h2>
+            <p><strong>Predicted Disease/Quality:</strong> {{ result.disease }}</p>
+            <p><strong>Confidence:</strong> {{ result.confidence|round(2) }}%</p>
+            <p><strong>Details:</strong> {{ result.disease_info }}</p>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <p style="color: red;">{{ error }}</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Disease Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script>
+        function updateFileName() {
+            var input = document.getElementById('file-input');
+            var label = document.getElementById('file-label');
+            if (input.files.length > 0) {
+                label.innerHTML = 'File selected!';  // Show custom message after file is chosen
+            } else {
+                label.innerHTML = '';  // Keep it empty if no file is selected
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Fruit Disease Detection</h1>
+            <p>Upload an image of a fruit to detect diseases or deficiencies.</p>
+
+            <!-- File Upload Form -->
+            <form action="/predict" method="post" enctype="multipart/form-data">
+                <!-- Custom file input with hidden input field -->
+                <label id="file-label" for="file-input" class="file-label">Choose a fruit image</label>
+                <input type="file" id="file-input" name="file" accept="image/*" required onchange="updateFileName()"
+                    style="display: none;">
+            </form>
+
+            <!-- If there's a result, display it -->
+            {% if result %}
+            <div class="result">
+                <h2>Prediction Result:</h2>
+                <p><strong>Detected Disease/Deficiency:</strong> {{ result.disease }}</p>
+                <p><strong>Confidence:</strong> {{ result.confidence }}%</p>
+                <h3>Information on Fruit Disease/Deficiency:</h3>
+                <pre>{{ result.disease_info }}</pre>
+            </div>
+            {% endif %}
+
+            <!-- Error message if no file is uploaded -->
+            {% if error %}
+            <p style="color: red;">{{ error }}</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>

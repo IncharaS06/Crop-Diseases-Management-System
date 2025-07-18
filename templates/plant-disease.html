@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script>
+        function updateFileName() {
+            var input = document.getElementById('file-input');
+            var label = document.getElementById('file-label');
+            if (input.files.length > 0) {
+                label.innerHTML = input.files[0].name;  // Display the name of the file
+            } else {
+                label.innerHTML = 'Choose a file...';  // Reset label if no file is chosen
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Plant Disease Detection</h1>
+            <p>Upload an image of a plant leaf to detect diseases.</p>
+
+            <!-- File Upload Form -->
+            <form action="/predict" method="post" enctype="multipart/form-data">
+                <label id="file-label" for="file-input" class="file-label">Choose a file...</label>
+                <input type="file" id="file-input" name="file" accept="image/*" required onchange="updateFileName()">
+                <button type="submit">Upload & Predict</button>
+            </form>
+
+            <!-- If there's a result, display it -->
+            {% if result %}
+            <div class="result">
+                <h2>Prediction Result:</h2>
+                <p><strong>Detected Disease:</strong> {{ result.disease }}</p>
+                <p><strong>Confidence:</strong> {{ result.confidence }}%</p>
+                <h3>Disease Information:</h3>
+                <pre>{{ result.disease_info }}</pre>
+            </div>
+            {% endif %}
+
+            <!-- Error message if no file is uploaded -->
+            {% if error %}
+            <p style="color: red;">{{ error }}</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,74 @@
+/* General page styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #fff4b3;
+    /* Light yellow background */
+    color: #333;
+    /* Dark text color for readability */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f9e1b0;
+    /* Slightly darker yellow */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header styles */
+h1 {
+    text-align: center;
+    color: #d47900;
+    /* Darker yellow for the header */
+}
+
+/* Button styles */
+button {
+    background-color: #f2c200;
+    /* Yellow button */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #f5a900;
+    /* Slightly darker yellow on hover */
+}
+
+/* Result section styles */
+.result {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #ffeb3b;
+    /* Bright yellow for result section */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result h2 {
+    color: #d47900;
+    /* Dark yellow */
+}
+
+.result p,
+.result pre {
+    color: #4e4e4e;
+    /* Darker text for better contrast */
+}
+
+.result pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #fff9e6;
+    /* Lighter background for preformatted text */
+    padding: 10px;
+    border-radius: 5px;
+}
